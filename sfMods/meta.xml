@@ -1,0 +1,10 @@
+<meta>
+    <script src='client/client.lua' type='client'/>
+    <script src='client/data.lua' type='shared'/>
+
+    <!-- Járművek -->
+    <file src='client/assets/vehicles/451.txd'/>
+    <file src='client/assets/vehicles/451.dff'/>
+    <file src='client/assets/vehicles/596.txd'/>
+    <file src='client/assets/vehicles/596.dff'/>
+</meta>

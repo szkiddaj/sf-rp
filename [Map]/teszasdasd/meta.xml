@@ -1,0 +1,9 @@
+<meta>
+	<info name="Shader - Ped Wall" description="Seen (sort of) this in zombie games." version="0.1.0" type="script" />
+	<min_mta_version client="1.5.1" server="1.5.1" />
+	<script src="c_ped_wall.lua" type="client" />
+	<script src="c_switch.lua" type="client" />
+	<file src="fx/ped_wall.fx" type="client" />
+	<file src="fx/ped_wall_mrt.fx" type="client" />
+	<file src="fx/post_edge.fx" type="client" />
+</meta>

@@ -1,0 +1,60 @@
+<meta>
+    <script src='server/server.lua' type='server'/>
+    <script src='server/database.lua' type='server'/>
+    <script src='server/identity.lua' type='server'/>
+
+    <script src='shared/data.lua' type='shared'/>
+    <script src='shared/functions.lua' type='shared'/>
+    <script src='shared/admins.lua' type='shared'/>
+
+    <script src='client/font.lua' type='client'/>
+    <script src='client/kurvaanyad.lua' type='client'/>
+    <script src='client/draw.lua' type='client'/>
+    <script src='client/checkbox.lua' type='client'/>
+    <script src='client/cursor.lua' type='client'/>
+    <script src='client/camera.lua' type='client'/>
+    <script src='client/button.lua' type='client'/>
+    <script src='client/input.lua' type='client'/>
+
+    <!-- Fontok -->
+    <file src='client/assets/fonts/OpenSans-Regular.ttf'/>
+    <file src='client/assets/fonts/OpenSans-ExtraBold.ttf'/>
+    <file src='client/assets/fonts/fontawesome.otf'/>
+
+    <!-- Szerver exportok -->
+    <export function='getConnection' type='server'/>
+
+    <!-- Shared exportok -->
+    <export function='debug' type='shared'/>
+    <export function='getAdminTitle' type='shared'/>
+    <export function='getAdminTitles' type='shared'/>
+    <export function='getServerSyntax' type='shared'/>
+    <export function='getServerData' type='shared'/>
+    <export function='getColor' type='shared'/>
+    <export function='getColors' type='shared'/>
+    <export function='getAllColors' type='shared'/>
+    <export function='findPlayer' type='shared'/>
+
+    <!-- Kliens exportok -->
+    <export function='dxDrawGradientRectangle' type='client'/>
+    <export function='dxDrawRoundedRectangle' type='client'/>
+    <export function='dxDrawButton' type='client'/>
+    <export function='getFont' type='client'/>
+    <export function='smoothCameraMove' type='client'/>
+    <export function='setCameraState' type='client'/>
+    <export function='cursorInZone' type='client'/>
+
+    <export function='addInput' type='client'/>
+    <export function='destroyInput' type='client'/>
+    <export function='getInputText' type='client'/>
+    <export function='setInputProperty' type='client'/>
+    <export function='isInputTyping' type='client'/>
+
+    <export function='addCheckbox' type='client'/>
+    <export function='destroyCheckbox' type='client'/>
+    <export function='setCheckboxProperty' type='client'/>
+
+    <export function='addButton' type='client'/>
+    <export function='destroyButton' type='client'/>
+    <export function='clickButton' type='client'/>
+</meta>

@@ -1,0 +1,9 @@
+<meta>
+    <script src='server/server.lua' type='server'/>
+    <script src='client/client.lua' type='client'/>
+
+    <export function='elementSayMessage' type='server'/>
+    <export function='elementMeMessage' type='server'/>
+    <export function='elementDoMessage' type='server'/>
+    <export function='elementTryMessage' type='server'/>
+</meta>

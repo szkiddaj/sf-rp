@@ -1,0 +1,26 @@
+<meta>
+    <script src='shared/items.lua' type='shared'/>
+    <script src='shared/functions.lua' type='shared'/>
+
+    <script src='server/use.lua' type='server'/>
+    <script src='server/async.lua' type='server'/>
+    <script src='server/server.lua' type='server'/>
+
+    <script src='client/client.lua' type='client'/>
+
+    <export function='loadPlayerInventory' type='server'/>
+
+    <file src='client/assets/images/logo.png'/>
+    <file src='client/assets/items/1.png'/>
+    <file src='client/assets/items/2.png'/>
+    <file src='client/assets/items/3.png'/>
+    <file src='client/assets/items/4.png'/>
+    <file src='client/assets/items/5.png'/>
+    <file src='client/assets/items/6.png'/>
+    <file src='client/assets/items/7.png'/>
+    <file src='client/assets/items/8.png'/>
+    <file src='client/assets/items/9.png'/>
+    <file src='client/assets/items/10.png'/>
+    <file src='client/assets/items/11.png'/>
+    <file src='client/assets/items/12.png'/>
+</meta>

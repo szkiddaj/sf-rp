@@ -1,0 +1,7 @@
+<meta>
+    <script src='server/server.lua' type='server'/>
+    <script src='client/client.lua' type='client'/>
+
+    <file src='client/assets/sounds/success.wav'/>
+    <file src='client/assets/sounds/failed.mp3'/>
+</meta>

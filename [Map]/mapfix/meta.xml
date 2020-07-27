@@ -1,0 +1,11 @@
+<meta>
+    <script src='client.lua' type='client'/>
+    <script src='water.lua' type='client'/>
+
+    <file src='assets/cuntwland39b.dff'/>
+    <file src='assets/cuntwland39b.col'/>
+    <file src='assets/cuntwroad68.dff'/>
+    <file src='assets/cuntwroad68.col'/>
+    <file src='assets/cuntwroad71.dff'/>
+    <file src='assets/cuntwroad71.col'/>
+</meta>

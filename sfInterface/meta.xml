@@ -1,0 +1,15 @@
+<meta>
+    <min_mta_version client="1.3.0-9.04431" />
+
+    <script src='client/client.lua' type='client'/>
+    <script src='client/elements/hud.lua' type='client'/>
+    <script src='client/elements/radar.lua' type='client'/>
+
+    <file src='client/elements/assets/images/map.png'/>
+    <file src='client/elements/assets/images/arrow.png'/>
+
+    <file src='client/elements/assets/blips/12.png'/>
+    <file src='client/elements/assets/blips/18.png'/>
+
+    <export function='addInterfaceElement' type='client'/>
+</meta>

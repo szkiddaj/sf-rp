@@ -1,0 +1,6 @@
+<meta>
+    <script src='client/client.lua' type='client'/>
+    <script src='server/server.lua' type='server'/>
+
+    <file src='client/assets/sound/loginmusic.mp3'/>
+</meta>

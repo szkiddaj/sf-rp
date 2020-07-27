@@ -1,0 +1,10 @@
+<meta>
+    <script src='client/fly.lua' type='client'/>
+    <script src='client/client.lua' type='client'/>
+
+    <script src='server/server.lua' type='server'/>
+
+    <export function='adminMessage' type='server'/>
+    <export function='hasPermission' type='server'/>
+    <export function='missingArguments' type='server'/>
+</meta>

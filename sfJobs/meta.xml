@@ -1,0 +1,17 @@
+<meta>
+
+    <script src='client/config.lua' type='client'/>
+    <script src='client/client.lua' type='client'/>
+    <script src='client/utils.lua' type='client'/>
+
+    <script src='server/config.lua' type='server'/>
+    <script src='server/server.lua' type='server'/>
+
+    <!-- Client assets -->
+    <file src='client/assets/fonts/OpenSans-Regular.ttf'/>
+    <file src='client/assets/fonts/OpenSans-Bold.ttf'/>
+
+    <!-- Jobs -->
+    <script src='jobs/bus/client.lua' type='client'/>
+    <script src='jobs/bus/server.lua' type='server'/>
+</meta>

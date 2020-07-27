@@ -1,0 +1,509 @@
+local core = exports['sfCore'];
+local object = exports['object_preview'];
+
+local sx, sy = guiGetScreenSize();
+local px, py = 500, 357;
+local x, y = sx/2-px/2, sy/2-py/2;
+
+local flood;
+
+local colors = core:getAllColors();
+
+local gender = 'male';
+local skin = 1;
+local skins = {
+    male = {1, 2, 7, 14, 15, 16, 18},
+    female = {9, 10, 11, 12, 13},
+};
+
+local music = playSound('client/assets/sound/loginmusic.mp3', true);
+
+addEventHandler('onClientResourceStart', resourceRoot, function()
+    triggerServerEvent('account:clientLoaded', localPlayer, localPlayer);
+    fadeCamera(true);
+    showChat(false);
+    showCursor(true);
+    updateCamera();
+end);
+
+--[[ Login ]]--
+
+function renderLogin()
+    drawSoundEffect();
+    dxDrawRectangle(0, 0, sx, sy, tocolor(colors.grey1.rgb[1], colors.grey1.rgb[2], colors.grey1.rgb[3], 220));
+    dxDrawText('Jelszó megjelenítése', x + 32, y + 84, _, y + 104, tocolor(200, 200, 200, 255), 1, core:getFont('opensans', 10), 'left', 'center');
+    dxDrawText('Adatok megjegyzése', x + 32, y + 110, _, y + 130, tocolor(200, 200, 200, 255), 1, core:getFont('opensans', 10), 'left', 'center');
+end 
+
+function showLogin(backFromRegistration)
+    setWindowSize(250, 214);
+    addEventHandler('onClientRender', root, renderLogin);
+    core:addInput('login:username', '', 'Felhasználónév', _, x, y, px, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 1, core:getFont('opensans', 11), 'center', 'center', false, _);
+    core:addInput('login:password', '', 'Jelszó', _, x, y+42, px, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 1, core:getFont('opensans', 11), 'center', 'center', false, true);
+    core:addCheckbox('login:showpass', x + 5, y + 84, 20, 20, {14, 14, 14, 255}, {224, 104, 34, 255}, tocolor(255, 255, 255), false, 1, 7);
+    core:addCheckbox('login:savedata', x + 5, y + 110, 20, 20, {14, 14, 14, 255}, {224, 104, 34, 255}, tocolor(255, 255, 255), false, 1, 7);
+    core:addButton('login:tryLogin', 'Bejelentkezés', x + 35/2, y+140, px - 35, 34, {14, 14, 14, 255}, {224, 104, 34, 255}, core:getFont('opensans', 11), 1);
+    core:addButton('login:showRegister', 'Regisztráció', x + 35/2, y+180, px - 35, 34, {14, 14, 14, 255}, {224, 104, 34, 255}, core:getFont('opensans', 11), 1);
+
+    --[[ Mentett login adatok betöltése ]]--
+    local file = xmlLoadFile('client/save.xml');
+    if (file) then 
+        if ((xmlNodeGetValue(xmlFindChild(file, 'load', 0)) or 0) == '1') then 
+            core:setInputProperty('login:username', 'text', xmlNodeGetValue(xmlFindChild(file, 'username', 0)));
+            core:setInputProperty('login:password', 'text', xmlNodeGetValue(xmlFindChild(file, 'password', 0)));
+            core:setCheckboxProperty('login:savedata', 'active', true);
+        end
+    end
+
+    addEventHandler('onCheckboxClick', root, function(name, active) 
+        if (name == 'login:showpass') then 
+            core:setInputProperty('login:password', 'masked', not active);
+        end
+    end);
+
+    addEventHandler('onButtonClick', root, tryLogin);
+    addEventHandler('onButtonClick', root, showRegistration);
+
+    addEventHandler('onCheckboxClick', root, saveLoginData);
+end
+
+function tryLogin(button)
+    if (button == 'login:tryLogin') then 
+        if (isTimer(flood)) then return; end 
+        flood = setTimer(function() end, 2000, 1);
+
+        local username = core:getInputText('login:username');
+        local password = core:getInputText('login:password');
+
+        if (string.len(username) >= 6) then 
+            if (string.len(password) >= 6) then
+                triggerServerEvent('account:login', localPlayer, localPlayer, username, password);
+            else 
+                core:debug('Rövid vagy hibás jelszó');
+            end
+        else 
+            core:debug('Rövid username');
+        end
+    end
+end
+
+addEvent('account:logged', true);
+addEventHandler('account:logged', root, function(hasCharacter)
+    core:destroyInput('login:username');
+    core:destroyInput('login:password');
+    core:destroyCheckbox('login:showpass');
+    core:destroyCheckbox('login:savedata');
+    core:destroyButton('login:tryLogin');
+    core:destroyButton('login:showRegister');
+    removeEventHandler('onButtonClick', root, showRegistration);
+    removeEventHandler('onButtonClick', root, tryLogin);
+    removeEventHandler('onClientRender', root, renderLogin);
+    removeEventHandler('onCheckboxClick', root, saveLoginData);
+
+    if (hasCharacter) then -- Karakter betöltés
+        startLoading();
+    else -- Karakter létrehozás
+        setWindowSize(525, 255);
+        showCharacterCreation();
+    end
+end);
+
+--[[ Regisztráció ]]--
+
+function renderRegistration()
+    drawSoundEffect();
+    dxDrawRectangle(0, 0, sx, sy, tocolor(colors.grey1.rgb[1], colors.grey1.rgb[2], colors.grey1.rgb[3], 220));
+end
+
+function showRegistration(button)
+    if (button == 'login:showRegister') then 
+        setWindowSize(250, 245);
+        core:destroyInput('login:username');
+        core:destroyInput('login:password');
+        core:destroyCheckbox('login:showpass');
+        core:destroyCheckbox('login:savedata');
+        core:destroyButton('login:tryLogin');
+        core:destroyButton('login:showRegister');
+
+        addEventHandler('onClientRender', root, renderRegistration);
+        removeEventHandler('onButtonClick', root, showRegistration);
+        removeEventHandler('onButtonClick', root, tryLogin);
+        removeEventHandler('onClientRender', root, renderLogin);
+        removeEventHandler('onCheckboxClick', root, saveLoginData);
+
+        core:addInput('registration:username', '', 'Felhasználónév', _, x, y, px, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 1, core:getFont('opensans', 11), 'center', 'center', false, _);
+        core:addInput('registration:email', '', 'Email cím', _, x, y + 42, px, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 1, core:getFont('opensans', 11), 'center', 'center', false, _);
+        core:addInput('registration:password', '', 'Jelszó', _, x, y + 84, px, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 1, core:getFont('opensans', 11), 'center', 'center', false, true);
+        core:addInput('registration:passwordagain', '', 'Jelszó (mégegyszer)', _, x, y + 126, px, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 1, core:getFont('opensans', 11), 'center', 'center', false, true);
+        core:addButton('registration:tryRegister', 'Regisztráció', x + 35 / 2, y + 170, px - 35, 34, {14, 14, 14, 255}, {224, 104, 34, 255}, core:getFont('opensans', 11), 1);
+        core:addButton('registration:showLogin', 'Visszalépés', x + 35 / 2, y + 210, px - 35, 34, {14, 14, 14, 255}, {224, 104, 34, 255}, core:getFont('opensans', 11), 1);
+
+        addEventHandler('onButtonClick', root, tryRegistration);
+        addEventHandler('onButtonClick', root, backToLogin);
+    end
+end
+
+function tryRegistration(button)
+    if (button == 'registration:tryRegister') then 
+        if (isTimer(flood)) then return; end 
+        flood = setTimer(function() end, 2000, 1);
+
+        local username = core:getInputText('registration:username');
+        local email = core:getInputText('registration:email');
+        local password = core:getInputText('registration:password');
+        local passwordagain = core:getInputText('registration:passwordagain');
+
+        if (string.len(username) >= 6) then 
+            if (string.len(email) >= 6 and string.find(email, '@')) then 
+                if (string.len(password) >= 6 and password == passwordagain) then
+                    triggerServerEvent('account:register', localPlayer, localPlayer, username, email, password);
+                else 
+                    core:debug('Rövid vagy hibás jelszó');
+                end
+            else 
+                core:debug('Hibás email cím');
+            end
+        else 
+            core:debug('Rövid username');
+        end
+    end 
+end
+
+function backToLogin(button)
+    if (button == 'registration:showLogin') then 
+        core:destroyInput('registration:username');
+        core:destroyInput('registration:email');
+        core:destroyInput('registration:password');
+        core:destroyInput('registration:passwordagain');
+        core:destroyButton('registration:tryRegister');
+        core:destroyButton('registration:showLogin');
+
+        removeEventHandler('onClientRender', root, renderRegistration);
+        removeEventHandler('onButtonClick', root, tryRegistration);
+        removeEventHandler('onButtonClick', root, backToLogin);
+
+        showLogin();
+    end 
+end
+
+--[[ Karakter létrehozás ]]--
+
+function renderCharacterCreation()
+    drawSoundEffect();
+    dxDrawRectangle(0, 0, sx, sy, tocolor(colors.grey1.rgb[1], colors.grey1.rgb[2], colors.grey1.rgb[3], 220));
+end
+
+function showCharacterCreation()
+    addEventHandler('onClientRender', root, renderCharacterCreation);
+
+    core:addInput('creation:name', '', 'Karakter név', _, x + px / 2 / 2 - 225 / 2, y + 75, 225, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 0.2, core:getFont('opensans', 11), 'center', 'center', false, _);
+    core:addInput('creation:bornat', '', 'Születési hely', _, x + px / 2 / 2 - 225 / 2, y + 75 + 40, 225, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 0.2, core:getFont('opensans', 11), 'center', 'center', false, _);
+    core:addInput('creation:age', '', 'Életkor', ' év', x + px / 2 / 2 - 113, y + 75 + 80, 70, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 0.2, core:getFont('opensans', 11), 'center', 'center', true, _);
+    core:addInput('creation:weight', '', 'Súly', ' kg', x + px / 2 / 2 - 70 / 2, y + 75 + 80, 70, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 0.2, core:getFont('opensans', 11), 'center', 'center', true, _);
+    core:addInput('creation:height', '', 'Magasság', ' cm', x + px / 2 / 2 + 43, y + 75 + 80, 70, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, 0.2, core:getFont('opensans', 11), 'center', 'center', true, _);
+    
+    core:addButton('creation:previous', '', x + px / 2 + 35, y + 75 + 40, 35, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, core:getFont('fa', 20), 0.2);
+    core:addButton('creation:next', '', x + px - 65, y + 75 + 40, 35, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, core:getFont('fa', 20), 0.2);
+
+    core:addButton('creation:gender_male', '', x + px - ( px / 2 / 2 ) - 250 / 2 + 125 - 35, y + 265, 35, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, core:getFont('fa', 15), 0.2);
+    core:addButton('creation:gender_female', '', x + px - ( px / 2 / 2 ) - 250 / 2 + 125 + 6, y + 265, 35, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, core:getFont('fa', 15), 0.2);
+    
+    core:addButton('creation:finish', 'Karakter befejezése', x + px / 2 / 2 - 225 / 2, y + 265, 225, 35, {14, 14, 14, 255}, {224, 104, 34, 255}, core:getFont('opensans', 11), 0.2);
+
+    local preview = createPed(skins[gender][skin], 0, 0, 0, 180);
+
+    local objectprev = object:createObjectPreview(preview, 0, 0, 0, 0.5, 0.2, 1, 1);
+    local window = guiCreateWindow(x + px - ( px / 2 / 2 ) - 250 / 2, y, 250, 250, 'preview', false, false);
+    guiSetAlpha(window, 0);
+    guiWindowSetMovable(window, false);
+    guiWindowSetSizable(window, false);
+    local projPosX, projPosY = guiGetPosition(window, true);
+	local projSizeX, projSizeY = guiGetSize(window, true);
+    object:setProjection(objectprev, projPosX, projPosY, projSizeX, projSizeY, true, true);
+    object:setRotation(objectprev, 0, 0, 180);
+    object:setDistanceSpread(preview, 40);
+
+    function changeGender(button)
+        if (button == 'creation:gender_male') then 
+            gender = 'male';
+            skin = 1;
+            setElementModel(preview, skins[gender][skin]);
+        elseif (button == 'creation:gender_female') then 
+            gender = 'female';
+            skin = 1;
+            setElementModel(preview, skins[gender][skin]);
+        end
+    end 
+
+    function previousSkin(button)
+        if (button == 'creation:previous') then 
+            if (skin > 1) then 
+                skin = skin - 1;
+            else 
+                skin = #skins[gender];
+            end
+
+            setElementModel(preview, skins[gender][skin]);
+        end
+    end 
+
+    function nextSkin(button)
+        if (button == 'creation:next') then 
+            if (#skins[gender] > skin) then 
+                skin = skin + 1;
+            else 
+                skin = 1;
+            end
+
+            setElementModel(preview, skins[gender][skin]);
+        end
+    end 
+
+    function completeCharacter(button)
+        if (button == 'creation:finish') then 
+            local name = core:getInputText('creation:name');
+            local borncity = core:getInputText('creation:bornat');
+            local age = tonumber(core:getInputText('creation:age'));
+            local weight = tonumber(core:getInputText('creation:weight'));
+            local height = tonumber(core:getInputText('creation:height'));
+            local chargender = gender and 'Férfi' or 'Nő';
+            local skin = skin;
+
+            if (age and age >= 16 and age <= 80) then 
+                if (weight and weight >= 40 and weight <= 125) then 
+                    if (height and height >= 120 and height <= 220) then 
+                        triggerServerEvent('account:characterCreation', localPlayer, localPlayer, name, borncity, age, weight, height, chargender, skins[gender][skin]);
+                    else 
+                        core:debug('Súly 120-220 között!');
+                    end
+                else 
+                    core:debug('Súly 40-125 között!');
+                end
+            else 
+                core:debug('Életkor 16-80 között!');
+            end
+        end
+    end
+
+    function characterCreated()
+        removeEventHandler('account:characterCreated', root, characterCreated);
+        removeEventHandler('onButtonClick', root, changeGender);
+        removeEventHandler('onButtonClick', root, previousSkin);
+        removeEventHandler('onButtonClick', root, nextSkin);
+        removeEventHandler('onButtonClick', root, completeCharacter);
+        removeEventHandler('onClientRender', root, renderCharacterCreation);
+
+        core:destroyInput('creation:name');
+        core:destroyInput('creation:bornat');
+        core:destroyInput('creation:age');
+        core:destroyInput('creation:weight');
+        core:destroyInput('creation:height');
+
+        core:destroyButton('creation:previous');
+        core:destroyButton('creation:next');
+        core:destroyButton('creation:gender_male');
+        core:destroyButton('creation:gender_female');
+        core:destroyButton('creation:finish');
+
+        object:destroyObjectPreview(objectprev);
+        destroyElement(preview);
+
+        showLogin();
+    end
+
+    addEvent('account:characterCreated', true);
+    addEventHandler('account:characterCreated', root, characterCreated);
+
+    addEventHandler('onButtonClick', root, changeGender);
+    addEventHandler('onButtonClick', root, previousSkin);
+    addEventHandler('onButtonClick', root, nextSkin);
+    addEventHandler('onButtonClick', root, completeCharacter);
+end 
+
+--[[ Betöltés ]]--
+
+local loading = {
+    alpha = 220,
+    animation = 'up',
+    percent = 0,
+    camera = false,
+    currentText = 1,
+    logo = {
+        animation = 'up',
+        percent = 0,
+    },
+};
+
+function renderLoading()
+    
+    --alpha
+    if (loading.animation == 'up') then 
+        drawSoundEffect();
+        if (loading.alpha < 255) then 
+            loading.alpha = loading.alpha + 0.2;
+        end
+    elseif (loading.animation == 'down') then
+        if (not loading.camera) then core:setCameraState(false); loading.camera = true; local x, y, z = getElementPosition(localPlayer); setElementPosition(localPlayer, x, y, getGroundPosition(x, y, 200000)); end
+        if (getCameraTarget() ~= localPlayer) then setCameraTarget(localPlayer); end
+        if (loading.alpha > 0) then 
+            loading.alpha = loading.alpha - 2;
+        else 
+            removeEventHandler('onClientRender', root, renderLoading);
+            stopSound(music);
+            setElementFrozen(localPlayer, false);
+            setElementData(localPlayer, 'logged', true);
+            showChat(true);
+            showCursor(false);
+        end 
+    end
+
+    if (loading.percent >= 100) then 
+        if (loading.animation ~= 'down') then loading.animation = 'down'; end
+    end
+
+    if (loading.logo.animation == 'up') then 
+        if (loading.logo.percent < 99) then 
+            loading.logo.percent = loading.logo.percent + 0.5;
+        else 
+            loading.logo.animation = 'down';
+        end 
+    else 
+        if (loading.logo.percent > 0) then 
+            loading.logo.percent = loading.logo.percent - 0.5;
+        else 
+            loading.logo.animation = 'up';
+        end 
+    end
+
+    local pos = {interpolateBetween(sx /2 , sy / 2 - 25, 0, sx / 2, sy / 2 + 25, 0, loading.logo.percent / 100, 'InOutBack')};
+
+    loading.percent = loading.percent + 0.05;
+
+    dxDrawRectangle(0, 0, sx, sy, tocolor(colors.grey1.rgb[1], colors.grey1.rgb[2], colors.grey1.rgb[3], loading.alpha > 0 and loading.alpha or 0));
+    dxDrawText('LOGOHELYE', pos[1], pos[2]);
+end 
+
+function startLoading()
+    addEventHandler('onClientRender', root, renderLoading);
+    loading.textTick = getTickCount();
+    setElementFrozen(localPlayer, true);
+    local x, y, z = getElementPosition(localPlayer);
+    setElementPosition(localPlayer, x, y, getGroundPosition(x, y, 200000));
+end
+
+--[[ BAN PANEL ]]--
+
+local banData;
+local banReasons = {'Azonosító', 'Admin', 'Karakter', 'Serial', 'Dátum', 'Lejárat', 'Indok'};
+
+function renderBanPanel()
+    dxDrawRectangle(x, y, px, py, colors.grey1.tocolor);
+    dxDrawText('Kitiltásra kerültél a szerverről! meg valami szöveg még ide.', x + 8, y + 10, x + px - 16, y + 50, tocolor(255, 255, 255), 1, core:getFont('opensans', 10), 'center', 'center');
+    local count = 0;
+    for i, v in ipairs(banData) do 
+        dxDrawRectangle(x + 10, y + 60 + (count * 42), px - 20, 36, colors.grey2.tocolor);
+        dxDrawText(colors.server.hex .. banReasons[i] .. ': ', x + 10 + 5, y + 60 + (count * 42) + 3, x + 10 + 70, y + 60 + (count * 42) + 36 - 6, tocolor(255, 255, 255), 1, core:getFont('opensans', 10), 'right', 'center', _, _, _, true);
+        dxDrawText(v, x + 10 + 73, y + 60 + (count * 42) + 3, x + 10 + px - 20 - 6, y + 60 + (count * 42) + 36 - 6, tocolor(255, 255, 255), 1, core:getFont('opensans', 10), 'left', 'center', true, true);
+        count = count + 1;
+    end
+end
+
+addEvent('account:banResponse', true);
+addEventHandler('account:banResponse', root, function(banned, data)
+    if (banned) then 
+        setWindowSize(500, 357);
+        banData = data;
+        addEventHandler('onClientRender', root, renderBanPanel);
+    else 
+        showLogin(false);
+    end
+end);
+
+--[[ Kamera faszom ]]--
+
+local camera = 1;
+local cameraPosition = {
+    {
+        position = {
+            start = {-2004.7427978516, 945.31066894531, 79.701240539551},
+            stop = {-2110.5686035156, 906.52160644531, 98.53466796875}
+        },
+        point = {
+            start = {-2064.2341308594, 931.74444580078, 59.243034362793},
+            stop = {-2064.2341308594, 931.74444580078, 59.243034362793},
+        },
+        time = 20000,
+    },
+    {
+        position = {
+            start = {-1558.6943359375, 522.68518066406, 7.03125},
+            stop = {-1558.6467285156, 655.43359375, 7.0390625}
+        },
+        point = {
+            start = {-1558.9178466797, 593.44091796875, 7.0390625},
+            stop = {-1558.9178466797, 593.44091796875, 7.0390625},
+        },
+        time = 20000,
+    },
+};
+
+function updateCamera()
+    local cam = cameraPosition[camera];
+    core:smoothCameraMove(cam.position.start, cam.position.stop, cam.point.start, cam.point.stop, cam.time);
+
+    setTimer(function()
+        if (#cameraPosition > camera) then camera = camera + 1; else camera = 1; end
+        updateCamera();
+    end, cam.time + 100, 1);
+end
+
+--[[ Adat mentés ]]--
+
+function saveLoginData(name, active)
+    if (name == 'login:savedata') then 
+        if (active) then 
+            local file = xmlLoadFile('client/save.xml');
+            if (not file) then 
+                file = xmlCreateFile('client/save.xml', 'logindata');
+                xmlNodeSetValue(xmlCreateChild(file, 'load'), '1');
+                xmlNodeSetValue(xmlCreateChild(file, 'username'), 'username');
+                xmlNodeSetValue(xmlCreateChild(file, 'password'), 'password');
+            end
+            xmlNodeSetValue(xmlFindChild(file, 'load', 0), 1);
+            xmlNodeSetValue(xmlFindChild(file, 'username', 0), core:getInputText('login:username'));
+            xmlNodeSetValue(xmlFindChild(file, 'password', 0), core:getInputText('login:password'));
+            xmlSaveFile(file);
+            xmlUnloadFile(file);
+        else 
+            local file = xmlLoadFile('client/save.xml');
+            if (file) then 
+                xmlNodeSetValue(xmlFindChild(file, 'load', 0), 0);
+                xmlSaveFile(file);
+                xmlUnloadFile(file);
+            end
+        end 
+    end
+end
+
+--[[ Egyéb ]]--
+
+local samples = 512;
+
+function drawSoundEffect()
+    if (music) then 
+        local soundFFT = getSoundFFTData(music, 2048, 256)
+	    if (soundFFT) then
+            for i = 0, 255 do -- Data starts from index 0
+                local height = math.sqrt(soundFFT[i]) * 256 <= 150 and math.sqrt ( soundFFT[i] ) * 256 or 150;
+                dxDrawRectangle(i * 9, sy - height, 8, height, tocolor(224, 104, 34, 255));
+            end
+        end
+    end
+end
+
+function setWindowSize(nx, ny)
+    px, py = nx, ny;
+    x, y = sx/2-px/2, sy/2-py/2;
+end
+
+setPlayerHudComponentVisible('all', false);
