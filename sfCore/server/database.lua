@@ -1,8 +1,8 @@
 local dbData = {
-    host = 'mysql.serverstack.hu',
-    username = 'u31_1lktY41VdU',
-    password = 'LA^8F!TQsf.rAmvPPYbnn+I4',
-    database = 's31_sfrp'
+    host = '',
+    username = '',
+    password = '',
+    database = ''
 };
 
 local connection;
